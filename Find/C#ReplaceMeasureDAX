@@ -5,10 +5,10 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 // Hide the 'Running Macro' spinbox
-ScriptHelper.WaitFormVisible = false;
+//ScriptHelper.WaitFormVisible = false;
 
 // Replace Selected.Measures with Model.AllMeasures to scan all measures
-var _measures = Model.AllMeasures;
+var _measures = Selected.Measures;
     // Optional: Replace _m.Expression with _m.Name to find & replace in names.
 
 // Initialize _find and _replace string variables
