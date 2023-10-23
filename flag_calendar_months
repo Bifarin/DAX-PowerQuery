@@ -1,0 +1,5 @@
+Last 12 Months = 
+    var todaysdate = TODAY()
+    return
+    // 12month before today and a month ahead
+    if(DATEDIFF('Calendar'[Date], todaysdate, MONTH) in GENERATESERIES(-1,12,1), 1,0) 
