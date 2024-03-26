@@ -1,0 +1,28 @@
+let
+    Source = Excel.CurrentWorkbook(){[Name="Table1"]}[Content],
+    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Cluster", Int64.Type}, {"Number of Sentences", Int64.Type}, {"Sentences", type text}}),
+    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"Number of Sentences"}),
+    #"Split Column by Delimiter" = Table.SplitColumn(#"Removed Columns", "Sentences", Splitter.SplitTextByDelimiter("|", QuoteStyle.Csv), {"Responses.1", "Responses.2"}), 
+    #"Changed Type1" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"Responses.1", type text}, {"Responses.2", type text}}),
+    #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Changed Type1", {"Cluster"}, "Attribute", "Value"),
+    #"Removed Columns1" = Table.RemoveColumns(#"Unpivoted Other Columns",{"Attribute"}),
+    #"Grouped Rows" = Table.Group(#"Removed Columns1", {"Cluster"}, {{"Values", each _[Value]}}),
+    #"Transposed Table" = Table.Transpose(#"Grouped Rows"),
+    PromotedHeaders = Table.PromoteHeaders(#"Transposed Table", [PromoteAllScalars=true]),
+
+    NumberOfInstances = 54,
+
+    // Generate the dynamic list column expressions
+    DynamicColumnExpressions1 = List.Transform(
+        {0..NumberOfInstances-1}, 
+        each "PromotedHeaders{" & "0" & "}["& Text.From(_ + 1)&"]"
+    ),
+
+    EvaluatedExpressions = List.Transform(
+        DynamicColumnExpressions1,
+        each Expression.Evaluate(_, [PromotedHeaders = PromotedHeaders])
+    ),
+    ColumnHeaders = List.Transform({1..NumberOfInstances}, each "Cluster" & Text.From(_)),
+    EvaluatedTable = Table.FromColumns(EvaluatedExpressions, ColumnHeaders)
+    in
+    EvaluatedTable
