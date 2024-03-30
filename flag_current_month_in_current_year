@@ -1,0 +1,15 @@
+Current Month = 
+VAR currentMonth = MONTH(TODAY())
+VAR currentYear = YEAR(TODAY())
+VAR currentDate = DATE(currentYear, currentMonth, 1)
+VAR selectedDate = 'Calendar'[Date]
+
+RETURN
+IF(
+    AND(
+        YEAR(selectedDate) = currentYear,
+        MONTH(selectedDate) = currentMonth
+    ),
+    1,
+    0
+)
