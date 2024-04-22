@@ -1,0 +1,3 @@
+= Table.AddColumn(#"Added Uniqueidentifier", "DateCategory", each Text.From([Date]) &"_" & [Category])
+
+// text.from is essential
