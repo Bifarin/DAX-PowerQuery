@@ -1,0 +1,35 @@
+let
+    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Last Refresh Date" = _t]),
+    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Last Refresh Date", type text}}),
+    // Add 10hours to the local utc. This makes sure the time is current at the Power BI service
+    #"Added Custom" = Table.AddColumn(
+    #"Changed Type",
+    "Last Refresh Date.1",
+    each
+    let
+        UtcNow = DateTimeZone.UtcNow(),
+        Year = Date.Year(DateTimeZone.RemoveZone(UtcNow)),
+
+        // First Sunday of October
+        Oct1 = #date(Year, 10, 1),
+        FirstSundayOct =
+            Date.AddDays(Oct1, 1),
+
+        // First Sunday of April
+        Apr1 = #date(Year, 4, Number.Mod((7 - Date.DayOfWeek(Oct1, Day.Sunday)),7)),
+        FirstSundayApr =
+            Date.AddDays(Apr1, Number.Mod((7 - Date.DayOfWeek(Apr1, Day.Sunday)),7)),
+
+        IsDST =
+            Date.From(DateTimeZone.RemoveZone(UtcNow)) >= FirstSundayOct
+            or Date.From(DateTimeZone.RemoveZone(UtcNow)) < FirstSundayApr,
+
+        SydneyOffset =
+            if IsDST then #duration(0,11,0,0) else #duration(0,10,0,0)
+    in
+        UtcNow + SydneyOffset
+),
+    #"Changed Type2" = Table.TransformColumnTypes(#"Added Custom",{{"Last Refresh Date.1", type datetime}}),
+    #"Removed Columns" = Table.RemoveColumns(#"Changed Type2",{"Last Refresh Date"})
+in
+    #"Removed Columns"
