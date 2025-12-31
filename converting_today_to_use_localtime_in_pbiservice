@@ -1,0 +1,11 @@
+VAR _SydneyNow =
+    UTCNOW() + //respecting daylight saving
+    IF(
+        MONTH(UTCNOW()) >= 10 || MONTH(UTCNOW()) <= 3,
+        TIME(11,0,0),  -- DST (AEDT)
+        TIME(10,0,0)   -- AEST
+    )
+
+VAR _MonthWhole = FORMAT(MONTH(_SydneyNow), "00")
+VAR _Year = YEAR(_SydneyNow)
+VAR _YearMonth = VALUE(_Year & _MonthWhole)
